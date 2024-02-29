@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "noEmitOnError": true,
+    "removeComments": true,
+    "sourceMap": true,
+    "target": "esnext",
+    "module": "commonjs",
+    "lib": [
+      "es2020",
+      "ESNext.BigInt",
+      "dom" // spotify web api requires dom
+    ],
+    "outDir": "dist",
+    "typeRoots": [
+      "./declarations",
+      "./node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ],
+    "moduleResolution": "node",
+    "allowJs": true,
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+  ]
+}
