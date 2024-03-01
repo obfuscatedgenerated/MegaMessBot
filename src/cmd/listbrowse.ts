@@ -197,4 +197,6 @@ export default {
     }
 } as DiscordCommand;
 
-// TODO test how it deals ith deletion of songs
+// TODO test how it deals with deletion of songs
+
+// TODO: filter by artist, album, who added, year range, etc

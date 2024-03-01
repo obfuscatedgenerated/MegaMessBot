@@ -23,7 +23,7 @@ export default {
             color: playlist.primary_color ? parseInt(playlist.primary_color, 16) : 0x1DB954,
             url: playlist.external_urls.spotify,
             image: {
-                url: playlist.images[0].url
+                url: playlist.images[0]?.url,
             },
             fields: [
                 {

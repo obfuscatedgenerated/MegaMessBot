@@ -11,7 +11,7 @@ export default {
             .setDescription("The index of the track in the playlist, starting from 1. If omitted, a random song will be selected.")
             .setRequired(false))
         .addBooleanOption(option => option.setName("reverse")
-            .setDescription("Whether to reverse the playlist index, so 1 is the last song.")
+            .setDescription("Whether to reverse the playlist index, so 1 is the last song. Has no effect if index is omitted.")
             .setRequired(false)),
 
     execute: async (interaction) => {
@@ -61,7 +61,7 @@ export default {
             color: 0x1DB954,
             url: item.track.external_urls.spotify,
             image: {
-                url: item.track.album.images[0].url
+                url: item.track.album.images[0]?.url
             },
             fields: [
                 {
@@ -80,7 +80,7 @@ export default {
             author: {
                 name: `Added by ${profile.display_name}`,
                 url: profile.external_urls.spotify,
-                iconURL: profile.images[0].url
+                iconURL: profile.images[0]?.url
             },
             footer: {
                 text: `Track ${effective_index + 1}/${total_tracks}`
