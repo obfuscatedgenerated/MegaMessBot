@@ -1,7 +1,7 @@
 import "source-map-support/register";
 import "dotenv/config";
 
-import { ActivityType, ChatInputCommandInteraction, Client, Collection, Interaction, Partials, Routes } from "discord.js";
+import { ChatInputCommandInteraction, Client, Collection, Interaction, Routes } from "discord.js";
 import { DiscordRateLimit } from "./rate_limit";
 
 import { DiscordCommand } from "./types";
@@ -265,3 +265,6 @@ client.login(process.env.DISCORD_TOKEN).then(() => {
 // TODO: support deploying "debug mode" commands to only the test server
 
 // this was copied from virtualstockexchange as a starter template, might be bit outdated!
+
+// TODO music quiz from spotify preview, make it a bot mode
+// TODO minimal music quiz using song info only
