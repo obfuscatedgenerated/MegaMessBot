@@ -62,7 +62,7 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
 
     const tracks = await spotify.playlists.getPlaylistItems(
         process.env.SPOTIFY_PLAYLIST_ID, null,
-        "items(added_by.id,added_at,track(name,artists(name,external_urls.spotify),album(name),album(images(url)),album(external_urls.spotify),album(release_date),external_urls.spotify))",
+        "items(added_by.id,added_at,track(name,artists(name,external_urls.spotify),album(name),album(external_urls.spotify),external_urls.spotify))",
         /* @ts-expect-error per_page is within range, but no way to prove it, even using bound check */
         session.per_page,
         (session.current_page - 1) * session.per_page
@@ -72,7 +72,7 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
 
     // build embed for the page
     const embed: Partial<Embed> = {
-        title: "Browsing playlist...",
+        title: "Browsing playlist",
         color: 0x1DB954,
         fields: [],
         footer: {
@@ -85,14 +85,12 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
         const absolute_index = (session.current_page - 1) * session.per_page + idx + 1;
 
         const added_at = new Date(item.added_at).valueOf();
-        const release_date = new Date(item.track.album.release_date).valueOf();
-
         const profile = await spotify.users.profile(item.added_by.id);
         // TODO: cache profiles
 
         embed.fields?.push({
-            name: `${absolute_index} - ${item.track.name} by ${item.track.artists[0].name}`,
-            value: `**[${item.track.album.name}](${item.track.album.external_urls.spotify})**\nAdded by [${profile.display_name}](${profile.external_urls.spotify}) at <t:${added_at / 1000}:F>\nReleased on <t:${release_date / 1000}:D>`
+            name: `${absolute_index}`,
+            value: `**[${item.track.name}](${item.track.external_urls.spotify}) by ${item.track.artists.map(artist => `[${artist.name}](${artist.external_urls.spotify})`).join(", ")}\n[${item.track.album.name}](${item.track.album.external_urls.spotify})**\n*Added by [${profile.display_name}](${profile.external_urls.spotify}) at <t:${added_at / 1000}:F>*`
         });
     }
 
