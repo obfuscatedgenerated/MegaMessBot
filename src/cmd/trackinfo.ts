@@ -15,6 +15,10 @@ export default {
             .setRequired(false)),
 
     execute: async (interaction) => {
+        if (!interaction.isCommand()) {
+            return;
+        }
+
         await interaction.deferReply();
 
         const spotify = get_spotify_sdk();

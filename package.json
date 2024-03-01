@@ -18,7 +18,8 @@
     "@spotify/web-api-ts-sdk": "^1.2.0",
     "discord.js": "^14.14.1",
     "dotenv": "^16.4.5",
-    "limiter": "^2.1.0"
+    "limiter": "^2.1.0",
+    "pagination.djs": "^4.0.14"
   },
   "devDependencies": {
     "@types/node": "^20.11.24",

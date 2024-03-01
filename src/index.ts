@@ -1,7 +1,7 @@
 import "source-map-support/register";
 import "dotenv/config";
 
-import { ChatInputCommandInteraction, Client, Collection, Interaction, Routes } from "discord.js";
+import { Client, Collection, Interaction, Partials, Routes } from "discord.js";
 import { DiscordRateLimit } from "./rate_limit";
 
 import { DiscordCommand } from "./types";
@@ -71,7 +71,7 @@ console.log("Spotify API client initialised.");
 
 console.log("Initialising Discord client...");
 
-const client = new Client({ intents: [], partials: [] });
+const client = new Client({ intents: [], partials: [ Partials.Channel ] });
 
 // must only be called when the client is ready
 export const get_client = () => {
@@ -102,32 +102,49 @@ client.on("ready", async () => {
 });
 
 client.on("interactionCreate", async (interaction: Interaction) => {
-    if (!interaction.isCommand()) {
-        return;
-    }
+    // TODO: component specific rate limit
+    if (interaction.isButton()) {
+        // assumes original reply is being edited. new replies each time will break it.
+        // could also use string splitting from custom id but thats a bit hacky
+        const command = commands.get(interaction.message.interaction?.commandName);
 
-    interaction = interaction as ChatInputCommandInteraction;
+        if (!command) {
+            throw new Error(`Command ${interaction.message.interaction?.commandName} not found from interaction.`);
+        }
 
-    const command = commands.get(interaction.commandName);
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            const reply_content = { embeds: [new ErrorEmbedWithLogging(error)] };
 
-    if (!command) {
-        return;
-    }
+            if (!interaction.deferred && !interaction.replied) {
+                interaction.reply(reply_content);
+            } else {
+                interaction.editReply(reply_content);
+            }
+        }
+    } else if (interaction.isChatInputCommand()) {
+        const command = commands.get(interaction.commandName);
 
-    if (!default_rate_limit.check(interaction.user.id)) {
-        interaction.reply({ embeds: [new RateLimitEmbed()] });
-        return;
-    }
+        if (!command) {
+            return;
+        }
 
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        const reply_content = { embeds: [new ErrorEmbedWithLogging(error)] };
+        if (!default_rate_limit.check(interaction.user.id)) {
+            interaction.reply({ embeds: [new RateLimitEmbed()] });
+            return;
+        }
 
-        if (!interaction.deferred && !interaction.replied) {
-            interaction.reply(reply_content);
-        } else {
-            interaction.editReply(reply_content);
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            const reply_content = { embeds: [new ErrorEmbedWithLogging(error)] };
+
+            if (!interaction.deferred && !interaction.replied) {
+                interaction.reply(reply_content);
+            } else {
+                interaction.editReply(reply_content);
+            }
         }
     }
 });

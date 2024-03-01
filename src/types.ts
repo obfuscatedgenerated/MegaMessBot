@@ -1,11 +1,11 @@
-import type { SlashCommandBuilder, ChatInputCommandInteraction, SlashCommandSubcommandsOnlyBuilder, SlashCommandSubcommandBuilder } from "discord.js";
+import type { SlashCommandBuilder, ChatInputCommandInteraction, SlashCommandSubcommandsOnlyBuilder, SlashCommandSubcommandBuilder, ButtonInteraction } from "discord.js";
 
 export interface DiscordCommand {
     data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder;
-    execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+    execute: (interaction: ChatInputCommandInteraction | ButtonInteraction) => Promise<void>;
 }
 
-export interface DiscordSubcommand {
+export interface DiscordPureSubcommand {
     data: SlashCommandSubcommandBuilder;
-    execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+    execute: (interaction: ChatInputCommandInteraction | ButtonInteraction) => Promise<void>;
 }
