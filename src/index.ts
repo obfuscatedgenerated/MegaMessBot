@@ -1,3 +1,4 @@
+import "source-map-support/register";
 import "dotenv/config";
 
 import { ActivityType, ChatInputCommandInteraction, Client, Collection, Interaction, Partials, Routes } from "discord.js";
@@ -96,8 +97,8 @@ export const get_client = () => {
 client.on("ready", async () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
-//    update_activity();
-//    setInterval(update_activity, 15000);
+    //    update_activity();
+    //    setInterval(update_activity, 15000);
 });
 
 client.on("interactionCreate", async (interaction: Interaction) => {
@@ -123,7 +124,7 @@ client.on("interactionCreate", async (interaction: Interaction) => {
     } catch (error) {
         const reply_content = { embeds: [new ErrorEmbedWithLogging(error)] };
 
-        if (!interaction.replied) { // TODO: not always working?
+        if (!interaction.deferred && !interaction.replied) {
             interaction.reply(reply_content);
         } else {
             interaction.editReply(reply_content);

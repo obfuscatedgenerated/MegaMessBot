@@ -12,7 +12,10 @@ export default {
         await interaction.deferReply();
 
         const spotify = get_spotify_sdk();
-        const playlist = await spotify.playlists.getPlaylist(process.env.SPOTIFY_PLAYLIST_ID, null, "name,description,images(url),primary_color,external_urls.spotify,followers.total,owner.display_name,owner.external_urls.spotify");
+        const playlist = await spotify.playlists.getPlaylist(process.env.SPOTIFY_PLAYLIST_ID,
+            null,
+            "name,description,images(url),primary_color,external_urls.spotify,followers.total,owner.display_name,owner.external_urls.spotify"
+        );
 
         const embed: Partial<Embed> = {
             title: playlist.name,
