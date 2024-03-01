@@ -1,5 +1,5 @@
 import type { DiscordCommand } from "../types";
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, Embed, Interaction, SlashCommandBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, Embed, Interaction, SlashCommandBuilder } from "discord.js";
 
 import { DiscordRateLimit } from "../rate_limit";
 import { RateLimitEmbed } from "../embeds/deny";
@@ -12,6 +12,7 @@ const rate_limit = new DiscordRateLimit(3, 2000);
 interface Session {
     current_page: number;
     per_page: number;
+    original_interaction: ChatInputCommandInteraction; // used solely to delete old interactions
 }
 
 const sessions = new Map<string, Session>(); // user id -> Session
@@ -72,12 +73,17 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
     // build embed for the page
     const embed: Partial<Embed> = {
         title: "Browsing playlist...",
-        description: `Page ${session.current_page} of ${total_pages}`,
         color: 0x1DB954,
-        fields: []
+        fields: [],
+        footer: {
+            text: `Page ${session.current_page}/${total_pages}`
+        }
     };
 
-    for (const item of tracks.items) {
+    for (let idx = 0; idx < tracks.items.length; idx++) {
+        const item = tracks.items[idx];
+        const absolute_index = (session.current_page - 1) * session.per_page + idx + 1;
+
         const added_at = new Date(item.added_at).valueOf();
         const release_date = new Date(item.track.album.release_date).valueOf();
 
@@ -85,12 +91,16 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
         // TODO: cache profiles
 
         embed.fields?.push({
-            name: `${item.track.name} by ${item.track.artists[0].name}`,
+            name: `${absolute_index} - ${item.track.name} by ${item.track.artists[0].name}`,
             value: `**[${item.track.album.name}](${item.track.album.external_urls.spotify})**\nAdded by [${profile.display_name}](${profile.external_urls.spotify}) at <t:${added_at / 1000}:F>\nReleased on <t:${release_date / 1000}:D>`
         });
     }
 
     return embed;
+};
+
+const freeze_interaction = async (interaction: ChatInputCommandInteraction) => {
+    await interaction.editReply({ components: []});
 };
 
 export default {
@@ -115,14 +125,23 @@ export default {
 
         const spotify = get_spotify_sdk();
 
-        // create a new session if it doesn't exist and this is a command
-        if (!sessions.has(interaction.user.id) && interaction.isCommand()) {
+        // create a new session every time the command is used
+        if (interaction.isCommand()) {
+            // if there is an old session, delete it, and freeze the old embed
+            const old_session = sessions.get(interaction.user.id);
+
+            if (old_session) {
+                await freeze_interaction(old_session.original_interaction);
+                sessions.delete(interaction.user.id);
+            }
+
             const per_page = interaction.options.getInteger("per_page") ?? 5;
             const initial_page = interaction.options.getInteger("initial_page") ?? 1;
 
             sessions.set(interaction.user.id, {
                 current_page: initial_page,
-                per_page
+                per_page,
+                original_interaction: interaction
             });
         }
 
@@ -164,9 +183,9 @@ export default {
                 await interaction.editReply({ embeds: [await make_embed(spotify, session)], components: [make_buttons(i.user.id, total_pages)] });
             });
 
-            // freeze the embed by removing the buttons
+            // freeze the embed after the time is up
             collector.on("end", async () => {
-                await interaction.editReply({ embeds: [await make_embed(spotify, session)] });
+                await freeze_interaction(interaction);
             });
 
             // send the initial embed
@@ -179,3 +198,5 @@ export default {
         }
     }
 } as DiscordCommand;
+
+// TODO test how it deals ith deletion of songs
