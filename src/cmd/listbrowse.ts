@@ -71,7 +71,7 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
 
     // build embed for the page
     const embed: Partial<Embed> = {
-        title: "Playlist",
+        title: "Browsing playlist...",
         description: `Page ${session.current_page} of ${total_pages}`,
         color: 0x1DB954,
         fields: []
@@ -86,7 +86,7 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
 
         embed.fields?.push({
             name: `${item.track.name} by ${item.track.artists[0].name}`,
-            value: `On [${item.track.album.name}](${item.track.album.external_urls.spotify})\nAdded by [${profile.display_name}](${profile.external_urls.spotify}) at <t:${added_at / 1000}:F>\nReleased on <t:${release_date / 1000}:D>`
+            value: `**[${item.track.album.name}](${item.track.album.external_urls.spotify})**\nAdded by [${profile.display_name}](${profile.external_urls.spotify}) at <t:${added_at / 1000}:F>\nReleased on <t:${release_date / 1000}:D>`
         });
     }
 
