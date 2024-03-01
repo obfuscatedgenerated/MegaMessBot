@@ -286,3 +286,4 @@ client.login(process.env.DISCORD_TOKEN).then(() => {
 // TODO music quiz from spotify preview, make it a bot mode
 // TODO minimal music quiz using song info only
 // TODO https://discordjs.guide/voice/audio-player.html#cheat-sheet or just attach file!
+// TODO use snapshot id as cache, centralise spotify sdk to use these caches. can also use to build member cache
