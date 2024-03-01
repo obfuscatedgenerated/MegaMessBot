@@ -57,7 +57,7 @@ export default {
                 },
                 {
                     name: "Release date",
-                    value: `<t:${Math.floor(release_date / 1000)}:F>`
+                    value: `<t:${Math.floor(release_date / 1000)}:D>`
                 },
                 {
                     name: "Added at",
