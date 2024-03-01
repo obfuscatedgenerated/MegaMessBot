@@ -14,7 +14,7 @@ export default {
         const spotify = get_spotify_sdk();
         const playlist = await spotify.playlists.getPlaylist(process.env.SPOTIFY_PLAYLIST_ID,
             null,
-            "name,description,images(url),primary_color,external_urls.spotify,followers.total,owner.display_name,owner.external_urls.spotify"
+            "name,description,images(url),primary_color,external_urls.spotify,followers.total,owner.display_name,owner.external_urls.spotify,tracks.total"
         );
 
         const embed: Partial<Embed> = {
@@ -26,6 +26,10 @@ export default {
                 url: playlist.images[0].url
             },
             fields: [
+                {
+                    name: "Tracks",
+                    value: playlist.tracks.total.toString()
+                },
                 {
                     name: "Followers",
                     value: playlist.followers.total.toString()
