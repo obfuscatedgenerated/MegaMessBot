@@ -8,8 +8,8 @@ export default {
         .setName("trackinfo")
         .setDescription("Gets info about a song in the playlist.")
         .addIntegerOption(option => option.setName("index")
-            .setDescription("The index of the track in the playlist, starting from 1.")
-            .setRequired(true))
+            .setDescription("The index of the track in the playlist, starting from 1. If omitted, a random song will be selected.")
+            .setRequired(false))
         .addBooleanOption(option => option.setName("reverse")
             .setDescription("Whether to reverse the playlist index, so 1 is the last song.")
             .setRequired(false)),
@@ -19,11 +19,20 @@ export default {
 
         const spotify = get_spotify_sdk();
 
-        // if in reverse mode, we need to get the playlist length
-        let effective_index = interaction.options.getInteger("index") - 1;
         const total_tracks = (await spotify.playlists.getPlaylist(process.env.SPOTIFY_PLAYLIST_ID, null, "tracks(total)")).tracks.total;
-        if (interaction.options.getBoolean("reverse")) {
-            effective_index = total_tracks - effective_index - 1;
+
+        let effective_index = 0;
+
+        // if no index is provided, select a random track
+        if (interaction.options.getInteger("index")) {
+            effective_index = interaction.options.getInteger("index") - 1;
+
+            // if reverse is true, reverse the index using the total number of tracks
+            if (interaction.options.getBoolean("reverse")) {
+                effective_index = total_tracks - effective_index - 1;
+            }
+        } else {
+            effective_index = Math.floor(Math.random() * total_tracks);
         }
 
         const tracks = await spotify.playlists.getPlaylistItems(
@@ -77,3 +86,5 @@ export default {
         await interaction.editReply({ embeds: [embed] });
     }
 } as DiscordCommand;
+
+// TODO: filters e.g. artist, who added, release date range, etc.
