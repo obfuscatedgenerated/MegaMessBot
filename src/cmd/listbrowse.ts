@@ -5,6 +5,7 @@ import { DiscordRateLimit } from "../rate_limit";
 import { RateLimitEmbed } from "../embeds/deny";
 
 import { get_spotify_sdk } from "..";
+import { OutOfRangeEmbed } from "../embeds/error";
 
 // additional rate limit for this command, only 3 requests every 2 seconds
 const rate_limit = new DiscordRateLimit(3, 2000);
@@ -111,7 +112,7 @@ export default {
             .setMinValue(1)
             .setMaxValue(25))
         .addIntegerOption(option => option.setName("initial_page")
-            .setDescription("The initial page to start browsing from. This will be ignored if out of range. Default: 1.")
+            .setDescription("The initial page to start browsing from. This will be ignored if too high. Default: 1.")
             .setRequired(false)
             .setMinValue(1)),
 
@@ -135,6 +136,14 @@ export default {
 
             const per_page = interaction.options.getInteger("per_page") ?? 5;
             const initial_page = interaction.options.getInteger("initial_page") ?? 1;
+
+            if (per_page < 1 || per_page > 25) {
+                await interaction.editReply({ embeds: [new OutOfRangeEmbed("Per page", 1, 25)] });
+            }
+
+            if (initial_page < 1) {
+                await interaction.editReply({ embeds: [new OutOfRangeEmbed("Initial page", 1)] });
+            }
 
             sessions.set(interaction.user.id, {
                 current_page: initial_page,

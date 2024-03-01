@@ -3,6 +3,8 @@ import { Embed, SlashCommandBuilder, SlashCommandSubcommandBuilder } from "disco
 
 import { get_spotify_sdk } from "..";
 
+import { OutOfRangeEmbed } from "../embeds/error";
+
 export const make_track_info_embed = async (effective_index: number, total_tracks: number, spotify: ReturnType<typeof get_spotify_sdk>) => {
     const tracks = await spotify.playlists.getPlaylistItems(
         process.env.SPOTIFY_PLAYLIST_ID, null,
@@ -60,7 +62,8 @@ const index_subcommand_data = new SlashCommandSubcommandBuilder()
     .setDescription("Gets info about a song in the playlist at a specific index.")
     .addIntegerOption(option => option.setName("index")
         .setDescription("The index of the track in the playlist, starting from 1.")
-        .setRequired(true))
+        .setRequired(true)
+        .setMinValue(1))
     .addBooleanOption(option => option.setName("reverse")
         .setDescription("Whether to reverse the playlist index, so 1 is the last song. Default: false.")
         .setRequired(false));
@@ -94,6 +97,11 @@ export default {
         if (interaction.options.getSubcommand() === "index") {
             const index = interaction.options.getInteger("index", true);
             const reverse = interaction.options.getBoolean("reverse");
+
+            if (index < 1 || index > total_tracks) {
+                await interaction.editReply({ embeds: [new OutOfRangeEmbed("Index", 1, total_tracks)] });
+                return;
+            }
 
             if (reverse) {
                 effective_index = total_tracks - index;
