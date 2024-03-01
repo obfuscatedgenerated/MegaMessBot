@@ -5,7 +5,7 @@ export interface DiscordCommand {
     execute: (interaction: ChatInputCommandInteraction | ButtonInteraction) => Promise<void>;
 }
 
-export interface DiscordPureSubcommand {
+export interface DiscordSubcommand {
     data: SlashCommandSubcommandBuilder;
     execute: (interaction: ChatInputCommandInteraction | ButtonInteraction) => Promise<void>;
 }
