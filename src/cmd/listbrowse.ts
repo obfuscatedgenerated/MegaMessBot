@@ -77,7 +77,7 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
         color: 0x1DB954,
         fields: [],
         footer: {
-            text: `Page ${session.current_page}/${total_pages}`
+            text: `Page ${session.current_page}/${total_pages} | Data courtesy of Spotify`
         }
     };
 
@@ -209,3 +209,5 @@ export default {
 // TODO test how it deals with deletion of songs
 
 // TODO: filter by artist, album, who added, year range, etc
+
+// TODO: jump to page button (rather than just command)

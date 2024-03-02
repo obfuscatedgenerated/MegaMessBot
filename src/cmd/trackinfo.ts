@@ -50,7 +50,7 @@ export const make_track_info_embed = async (effective_index: number, total_track
             iconURL: profile.images[0]?.url
         },
         footer: {
-            text: `Track ${effective_index + 1}/${total_tracks}`
+            text: `Track ${effective_index + 1}/${total_tracks} | Data courtesy of Spotify`
         }
     };
 

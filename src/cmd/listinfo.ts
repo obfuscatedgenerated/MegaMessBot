@@ -38,7 +38,10 @@ export default {
                     name: "Owner",
                     value: `[${playlist.owner.display_name}](${playlist.owner.external_urls.spotify})`
                 }
-            ]
+            ],
+            footer: {
+                text: "Data courtesy of Spotify"
+            }
         };
 
         await interaction.editReply({ embeds: [embed] });
