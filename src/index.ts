@@ -1,7 +1,7 @@
 import "source-map-support/register";
 import "dotenv/config";
 
-import { Client, Collection, Interaction, Partials, Routes } from "discord.js";
+import { ButtonInteraction, ChatInputCommandInteraction, Client, Collection, Interaction, Partials, Routes } from "discord.js";
 import { DiscordRateLimit } from "./rate_limit";
 
 import { DiscordCommand } from "./types";
@@ -83,7 +83,7 @@ console.log("Spotify API client initialised.");
 
 console.log("Initialising Discord client...");
 
-const client = new Client({ intents: [], partials: [ Partials.Channel ] });
+const client = new Client({ intents: [], partials: [Partials.Channel] });
 
 // must only be called when the client is ready
 export const get_client = () => {
@@ -114,53 +114,55 @@ client.on("ready", async () => {
 });
 
 client.on("interactionCreate", async (interaction: Interaction) => {
-    // TODO: component specific rate limit
-    if (interaction.isButton()) {
+    let cmd_name: string;
+
+    // narrow command name and interaction typing
+    if (interaction.isCommand() || interaction.isAutocomplete()) {
+        cmd_name = interaction.commandName;
+        interaction = interaction as ChatInputCommandInteraction;
+    } else if (interaction.isButton()) {
         // assumes original reply is being edited. new replies each time will break it.
         // could also use string splitting from custom id but thats a bit hacky
-        const command = commands.get(interaction.message.interaction?.commandName);
+        cmd_name = interaction.message.interaction?.commandName;
+        interaction = interaction as ButtonInteraction;
+    } else {
+        return;
+    }
 
-        if (!command) {
-            throw new Error(`Command ${interaction.message.interaction?.commandName} not found from interaction.`);
-        }
+    // TODO: better handling of this for different types of interactions
+    if (!default_rate_limit.check(interaction.user.id)) {
+        interaction.reply({ embeds: [new RateLimitEmbed()] });
+        return;
+    }
 
-        try {
+    if (!cmd_name) {
+        throw new Error("Command name not found.");
+    }
+
+    const command = commands.get(cmd_name);
+
+    if (!command) {
+        throw new Error(`Command not found: ${cmd_name}`);
+    }
+
+    try {
+        // run autocomplete if it exists and the interaction is an autocomplete, otherwise just call the execute handler
+        if (interaction.isAutocomplete() && command.autocomplete) {
+            await command.autocomplete(interaction);
+        } else {
             await command.execute(interaction);
-        } catch (error) {
-            const reply_content = { embeds: [new ErrorEmbedWithLogging(error)] };
-
-            if (!interaction.deferred && !interaction.replied) {
-                interaction.reply(reply_content);
-            } else {
-                interaction.editReply(reply_content);
-            }
         }
-    } else if (interaction.isChatInputCommand()) {
-        const command = commands.get(interaction.commandName);
+    } catch (error) {
+        // log the error and send a message to the user
+        const reply_content = { embeds: [new ErrorEmbedWithLogging(error)] };
 
-        if (!command) {
-            return;
-        }
-
-        if (!default_rate_limit.check(interaction.user.id)) {
-            interaction.reply({ embeds: [new RateLimitEmbed()] });
-            return;
-        }
-
-        try {
-            await command.execute(interaction);
-        } catch (error) {
-            const reply_content = { embeds: [new ErrorEmbedWithLogging(error)] };
-
-            if (!interaction.deferred && !interaction.replied) {
-                interaction.reply(reply_content);
-            } else {
-                interaction.editReply(reply_content);
-            }
+        if (!interaction.deferred && !interaction.replied) {
+            interaction.reply(reply_content);
+        } else {
+            interaction.editReply(reply_content);
         }
     }
 });
-
 
 interface RegisteredCommand {
     name: string;
@@ -299,3 +301,4 @@ client.login(process.env.DISCORD_TOKEN).then(() => {
 // TODO minimal music quiz using song info only
 // TODO https://discordjs.guide/voice/audio-player.html#cheat-sheet or just attach file!
 // TODO use snapshot id as cache, centralise spotify sdk to use these caches. can also use to build member cache
+// TODO user info command that shows top genres
