@@ -40,7 +40,8 @@ export default {
                 }
             ],
             footer: {
-                text: "Data courtesy of Spotify"
+                text: "Data courtesy of Spotify",
+                iconURL: "https://cdn.discordapp.com/emojis/1213623581490290688.webp"
             }
         };
 

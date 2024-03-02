@@ -77,7 +77,8 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
         color: 0x1DB954,
         fields: [],
         footer: {
-            text: `Page ${session.current_page}/${total_pages} | Data courtesy of Spotify`
+            text: `Data courtesy of Spotify | Page ${session.current_page}/${total_pages}`,
+            iconURL: "https://cdn.discordapp.com/emojis/1213623581490290688.webp"
         }
     };
 
