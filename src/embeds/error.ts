@@ -1,5 +1,7 @@
 import { IconEmbedBuilder, Icon, ColorTable } from ".";
 
+import { randomUUID } from "crypto";
+
 export class ErrorEmbed extends IconEmbedBuilder {
     constructor(title_text = "Error", add_default_description = true) {
         super(title_text, Icon.ERROR);
@@ -12,8 +14,16 @@ export class ErrorEmbed extends IconEmbedBuilder {
 }
 
 export class ErrorEmbedWithLogging extends ErrorEmbed {
-    constructor(error: Error, title_text = "Error") {
+    constructor(error: Error, title_text = "Error", add_id = true) {
         super(title_text);
+
+
+        if (add_id) {
+            const id = randomUUID();
+            this.setFooter({ text: `Error ID: ${id}` });
+            console.error(`Error ID: ${id}`);
+        }
+
         console.error(error);
     }
 }
@@ -21,7 +31,7 @@ export class ErrorEmbedWithLogging extends ErrorEmbed {
 export class OutOfRangeEmbed extends ErrorEmbed {
     constructor(field_name: string, lower_bound?: number, upper_bound?: number) {
         super(`${field_name} out of range`, false);
-        
+
         if (lower_bound && upper_bound) {
             this.setDescription(`${field_name} must be between ${lower_bound} and ${upper_bound}.`);
         } else if (lower_bound) {
