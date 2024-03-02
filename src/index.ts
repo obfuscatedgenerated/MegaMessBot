@@ -20,6 +20,18 @@ if (!process.env.DISCORD_TOKEN) {
     throw new Error("DISCORD_TOKEN not set");
 }
 
+if (!process.env.SPOTIFY_CLIENT_ID) {
+    throw new Error("SPOTIFY_CLIENT_ID not set");
+}
+
+if (!process.env.SPOTIFY_CLIENT_SECRET) {
+    throw new Error("SPOTIFY_CLIENT_SECRET not set");
+}
+
+if (!process.env.SPOTIFY_PLAYLIST_ID) {
+    throw new Error("SPOTIFY_PLAYLIST_ID not set");
+}
+
 console.log("Loading commands...");
 
 const command_dir = path_join(__dirname, "cmd");
