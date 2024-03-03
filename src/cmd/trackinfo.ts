@@ -2,6 +2,7 @@ import type { DiscordCommand } from "../types";
 import { Embed, SlashCommandBuilder, SlashCommandSubcommandBuilder } from "discord.js";
 
 import { get_spotify_sdk } from "..";
+import * as user_cache from "../user_cache";
 
 import { OutOfRangeEmbed } from "../embeds/error";
 
@@ -16,7 +17,7 @@ export const make_track_info_embed = async (effective_index: number, total_track
     const item = tracks.items[0];
 
     // get profile of user who added the track
-    const profile = await spotify.users.profile(item.added_by.id);
+    const profile = await user_cache.get(spotify, item.added_by.id);
 
     // convert datetimes to unix timestamps
     const added_at = new Date(item.added_at).valueOf();

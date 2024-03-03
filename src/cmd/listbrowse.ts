@@ -5,6 +5,8 @@ import { DiscordRateLimit } from "../rate_limit";
 import { RateLimitEmbed } from "../embeds/deny";
 
 import { get_spotify_sdk } from "..";
+import * as user_cache from "../user_cache";
+
 import { OutOfRangeEmbed } from "../embeds/error";
 
 // additional rate limit for this command, only 3 requests every 2 seconds
@@ -87,8 +89,7 @@ const make_embed = async (spotify: ReturnType<typeof get_spotify_sdk>, session: 
         const absolute_index = (session.current_page - 1) * session.per_page + idx + 1;
 
         const added_at = new Date(item.added_at).valueOf();
-        const profile = await spotify.users.profile(item.added_by.id);
-        // TODO: cache profiles
+        const profile = await user_cache.get(spotify, item.added_by.id);
 
         embed.fields?.push({
             name: `${absolute_index}`,
@@ -188,6 +189,7 @@ export default {
                     session.current_page = total_pages;
                 }
 
+                // TODO: show loading page while waiting for the new embed, or some way to delay the button loading animation ending
                 await interaction.editReply({ embeds: [await make_embed(spotify, session)], components: [make_buttons(i.user.id, total_pages)] });
             });
 
