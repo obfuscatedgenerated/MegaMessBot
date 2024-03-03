@@ -14,7 +14,6 @@ export interface CachedUser extends User {
 }
 
 const user_cache = new Map<string, CachedUser>();
-let analysis_snapshot: string;
 
 ///**
 // * Purges the cache of users who haven't been updated in a while.
@@ -67,26 +66,43 @@ export const list = () => {
     return user_cache.values();
 };
 
+let analysis_snapshot: string;
+let analysis_in_progress = false;
+
+export const is_analysis_in_progress = () => analysis_in_progress;
+
+export const is_analysis_due = async (spotify: ReturnType<typeof get_spotify_sdk>) => {
+    const snapshot = (await spotify.playlists.getPlaylist(process.env.SPOTIFY_PLAYLIST_ID, null, "snapshot_id")).snapshot_id;
+
+    if (snapshot === analysis_snapshot) {
+        return false;
+    }
+
+    analysis_snapshot = snapshot;
+    return true;
+};
 
 let analysis_start_time: number;
 
 /**
  * Analyses the playlist to add and get information about all collaborating users.<br>
- * This function is expensive and should be used sparingly.<br>
  * This will add the analysis field to all users in the cache.<br>
+ * This function is expensive if the playlist has changed and should be used sparingly.<br>
  * If the playlist hasn't changed since the last analysis, this function will do nothing.
  * 
  * @param spotify The Spotify SDK instance.
  */
-export const analyse = async (spotify: ReturnType<typeof get_spotify_sdk>) => {
-    // ensure playlist has changed before re-analysing
-    const snapshot = (await spotify.playlists.getPlaylist(process.env.SPOTIFY_PLAYLIST_ID, null, "snapshot_id")).snapshot_id;
-
-    if (snapshot === analysis_snapshot) {
+export const analyse = async (spotify: ReturnType<typeof get_spotify_sdk>, skip_check = false) => {
+    if (analysis_in_progress) {
         return;
     }
 
-    analysis_snapshot = snapshot;
+    // ensure playlist has changed before re-analysing
+    if (!skip_check && !is_analysis_due(spotify)) {
+        return;
+    }
+    
+    analysis_in_progress = true;
 
     console.warn("Re-analysing playlist...");
     analysis_start_time = Date.now();
@@ -104,7 +120,7 @@ export const analyse = async (spotify: ReturnType<typeof get_spotify_sdk>) => {
         const tracks = await spotify.playlists.getPlaylistItems(
             process.env.SPOTIFY_PLAYLIST_ID,
             null,
-            "items(added_by.id,added_at,track(name,artists(name,external_urls.spotify),album(name),album(external_urls.spotify),album(images(url)),album(external_urls.spotify),album(release_date),external_urls.spotify)",
+            "items", // TODO: fetch reduced data, excluding irrelevant stuff. perhaps design cache around what caller requests
             TRACK_FETCH_LIMIT,
             offset
         );
@@ -128,9 +144,10 @@ export const analyse = async (spotify: ReturnType<typeof get_spotify_sdk>) => {
     }
 
     console.warn(`Playlist analysis took ${Date.now() - analysis_start_time}ms`);
+    analysis_in_progress = false;
 };
 
 // TODO: embed to show when analysis is running
 // TODO: additionally cache playlist tracks to speed up listbrowse and trackinfo commands
 // TODO: persist cache to disk?
-
+// TODO: set spotify instance at init and then dont bother passing it around

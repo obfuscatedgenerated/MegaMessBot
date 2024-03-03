@@ -1,10 +1,10 @@
 import "source-map-support/register";
 import "dotenv/config";
 
-import { ButtonInteraction, ChatInputCommandInteraction, Client, Collection, Interaction, Partials, Routes } from "discord.js";
+import { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, Collection, Interaction, Partials, Routes } from "discord.js";
 import { DiscordRateLimit } from "./rate_limit";
 
-import { DiscordCommand } from "./types";
+import { DiscordCommand, ExecutableInteraction } from "./types";
 
 import { ErrorEmbedWithLogging } from "./embeds/error";
 import { RateLimitEmbed } from "./embeds/deny";
@@ -117,21 +117,19 @@ client.on("interactionCreate", async (interaction: Interaction) => {
     let cmd_name: string;
 
     // narrow command name and interaction typing
-    if (interaction.isCommand() || interaction.isAutocomplete()) {
+    if (interaction.isCommand()) {
         cmd_name = interaction.commandName;
-        interaction = interaction as ChatInputCommandInteraction;
+
+        // TODO: better handling of this for different types of interactions
+        if (!default_rate_limit.check(interaction.user.id)) {
+            interaction.reply({ embeds: [new RateLimitEmbed()] });
+            return;
+        }
     } else if (interaction.isButton()) {
         // assumes original reply is being edited. new replies each time will break it.
         // could also use string splitting from custom id but thats a bit hacky
         cmd_name = interaction.message.interaction?.commandName;
-        interaction = interaction as ButtonInteraction;
     } else {
-        return;
-    }
-
-    // TODO: better handling of this for different types of interactions
-    if (!default_rate_limit.check(interaction.user.id)) {
-        interaction.reply({ embeds: [new RateLimitEmbed()] });
         return;
     }
 
@@ -146,12 +144,8 @@ client.on("interactionCreate", async (interaction: Interaction) => {
     }
 
     try {
-        // run autocomplete if it exists and the interaction is an autocomplete, otherwise just call the execute handler
-        if (interaction.isAutocomplete() && command.autocomplete) {
-            await command.autocomplete(interaction);
-        } else {
-            await command.execute(interaction);
-        }
+        // TODO is this a safe cast?
+        await command.execute(interaction as ExecutableInteraction);
     } catch (error) {
         // log the error and send a message to the user
         const reply_content = { embeds: [new ErrorEmbedWithLogging(error)] };
@@ -161,6 +155,30 @@ client.on("interactionCreate", async (interaction: Interaction) => {
         } else {
             interaction.editReply(reply_content);
         }
+    }
+});
+
+// solely handles autocomplete interactions
+client.on("interactionCreate", async (interaction: AutocompleteInteraction) => {
+    if (!interaction.isAutocomplete()) {
+        return;
+    }
+
+    const cmd_name = interaction.commandName;
+    const command = commands.get(cmd_name);
+
+    if (!command) {
+        throw new Error(`Command not found: ${cmd_name}`);
+    }
+
+    try {
+        if (command.autocomplete) {
+            await command.autocomplete(interaction);
+        } else {
+            throw new Error(`Command ${cmd_name} does not have an autocomplete function, but it received an autocomplete interaction.`);
+        }
+    } catch (error) {
+        console.error(error);
     }
 });
 
