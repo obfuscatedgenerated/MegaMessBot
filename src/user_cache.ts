@@ -121,3 +121,5 @@ export const analyse = async (spotify: ReturnType<typeof get_spotify_sdk>) => {
         offset += TRACK_FETCH_LIMIT;
     }
 };
+
+// TODO: additionally cache playlist tracks to speed up listbrowse and trackinfo commands
