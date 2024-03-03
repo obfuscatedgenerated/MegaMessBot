@@ -67,6 +67,9 @@ export const list = () => {
     return user_cache.values();
 };
 
+
+let analysis_start_time: number;
+
 /**
  * Analyses the playlist to add and get information about all collaborating users.<br>
  * This function is expensive and should be used sparingly.<br>
@@ -84,6 +87,9 @@ export const analyse = async (spotify: ReturnType<typeof get_spotify_sdk>) => {
     }
 
     analysis_snapshot = snapshot;
+
+    console.warn("Re-analysing playlist...");
+    analysis_start_time = Date.now();
 
     // TODO: some form of heuristic so that the whole playlist doesn't have to be re-analysed every time
     // as in a way to only analyse the difference, removing old tracks and adding new ones
@@ -120,6 +126,11 @@ export const analyse = async (spotify: ReturnType<typeof get_spotify_sdk>) => {
 
         offset += TRACK_FETCH_LIMIT;
     }
+
+    console.warn(`Playlist analysis took ${Date.now() - analysis_start_time}ms`);
 };
 
+// TODO: embed to show when analysis is running
 // TODO: additionally cache playlist tracks to speed up listbrowse and trackinfo commands
+// TODO: persist cache to disk?
+
