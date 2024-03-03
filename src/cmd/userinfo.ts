@@ -4,6 +4,8 @@ import { Embed, SlashCommandBuilder } from "discord.js";
 import { get_spotify_sdk } from "..";
 import * as user_cache from "../user_cache";
 
+import Fuse from "fuse.js";
+
 // TODO: could use registration system and just use mentionable as the type
 export default {
     data: new SlashCommandBuilder()
@@ -49,22 +51,30 @@ export default {
 
         const input = interaction.options.getString("user_id", true);
 
-        const users = user_cache.list();
+        const users = Array.from(user_cache.list());
         const results: { name: string, value: string }[] = [];
 
-        for (const user of users) {
-            if (!user.display_name.toLowerCase().includes(input.toLowerCase())) {
-                continue;
-            }
+        const fuse = new Fuse(users, {
+            keys: ["display_name"]
+        });
 
-            // TODO: less resource intensive way to do this
+        // TODO: debounce/ratelimit
+
+        const matches = fuse.search(input, { limit: 25 });
+        // TODO: skip search if no input to browse all users
+        // TODO: show if truncation occurred
+
+        for (const match of matches) {
+            const user = match.item;
 
             // if there is already a matching display name, make it clear that there are multiple
             // do this by adding the user ID to the end of the display name in brackets
             // make sure to do this to the old one as well
 
-            const existing = results.find(match => {
-                const name_without_id = match.name.replace(/\s\(\d+\)$/, "");
+            const existing = results.find(m => {
+                // TODO: less resource intensive and smarter way to do this (that wont get tricked by brackets in the original name)
+                // use regex to match the id in brackets at the end of the name
+                const name_without_id = m.name.replace(/\s\((.+)\)$/, "");
                 return name_without_id === user.display_name;
             });
 
@@ -74,11 +84,6 @@ export default {
             } else {
                 results.push({ name: user.display_name, value: user.id });
             }
-
-            // TODO: make truncation clear
-            if (results.length >= 25) {
-                break;
-            }
         }
 
         await interaction.respond(results);
@@ -86,3 +91,4 @@ export default {
 } as DiscordCommand;
 
 // TODO: we can reuse this for user filtering in listbrowse! put this in its own module
+// TODO: leaderboard of user contributions

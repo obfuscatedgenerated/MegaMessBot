@@ -1,7 +1,7 @@
 import "source-map-support/register";
 import "dotenv/config";
 
-import { AutocompleteInteraction, ButtonInteraction, ChatInputCommandInteraction, Client, Collection, Interaction, Partials, Routes } from "discord.js";
+import { AutocompleteInteraction, Client, Collection, Interaction, Partials, Routes } from "discord.js";
 import { DiscordRateLimit } from "./rate_limit";
 
 import { DiscordCommand, ExecutableInteraction } from "./types";
