@@ -119,3 +119,10 @@ export default {
 } as DiscordCommand;
 
 // TODO: filters e.g. artist, who added, release date range, etc.
+// TODO: https://developer.spotify.com/documentation/web-api/reference/get-audio-analysis
+// TODO: https://developer.spotify.com/documentation/web-api/reference/get-audio-features
+// TODO: https://developer.spotify.com/documentation/web-api/reference/get-several-audio-features
+// TODO: get artist genres
+// TODO: get popularity scores
+// TODO: perhaps all these can be asked for specifically or as an advanced flag
+
